@@ -1,84 +1,89 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import axios from 'axios'
-
+import axios from 'axios';
+import TodoItem from './todo-item';
 import './styles.css'
-import TodoItem from './todo-item'
 
 class App extends React.Component {
-  constructor() {
-    super()
-
-    this.state = {
-      todo: "",
-      todos: []
+    constructor() {
+        super()
+        this.state = {
+            todo: "",
+            todos: []
+        }
     }
-  }
-
-  renderTodoItems = () => {
-    return this.state.todos.map(item => {
-      return <TodoItem key={item.id} item={item}/>
-    })
-  }
-
-  componentDidMount() {
-    fetch("http://localhost:5000/todos")
-      .then(response => response.json())
-      .then(data => {
+    componentDidMount() {
+        fetch("http://localhost:5000/todos")
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    todos: data
+                })
+            })
+    }
+    handleChange = (e) => {
         this.setState({
-          todos: data
+            todo: e.target.value
         })
-      })
-  }
-
-  handleSubmit = (event) => {
-    axios({
-      method: "post",
-      url: 'http://localhost:5000/todo',
-      headers: { "content-type": "application/json" },
-      data: {
-        title: this.state.todo,
-        done: false
-      }
-    }).then(response => {
-      // console.log("Response from post", response)
-      this.setState({
-        todos: [...this.state.todos, response.data],
-        todo: ""
-      })
-    }).catch(error => {
-      console.log("error in handleSubmit", error)
-    })
-    event.preventDefault()
-  }
-
-  handleChange = (event) => {
-    this.setState({
-      todo: event.target.value
-    })
-  }
-
-  render() {
-    return (
-      <div className="app">
-        <h1>Todo List</h1>
-        <form className="add-todo" onSubmit={this.handleSubmit}>
-          <input 
-            type="text"
-            placeholder="Add Todo"
-            value={this.state.todo}
-            onChange={this.handleChange}
-          />
-
-          <button
-            type="submit"
-          >Submit</button>
-        </form>
-
-        {this.renderTodoItems()}
-      </div>
-    )
-  }
+    }
+    addTodo = (e) => {
+        e.preventDefault()
+        axios({
+            method: "post",
+            url: "http://localhost:5000/todo",
+            headers: { "content-type": "application/json" },
+            data: {
+                title: this.state.todo,
+                done: false
+            }
+        })
+        .then(data => {
+            this.setState({
+                todos: [...this.state.todos, data.data],
+                todo: ""
+            })
+        })
+        .catch(error => {
+            console.log("add todo error: ", error)
+        })
+    }
+    renderTodos = () => {
+        return this.state.todos.map((todo) => {
+            return <TodoItem key={todo.id} todo={todo} deleteItem={this.deleteItem}/>
+        })
+    }
+    deleteItem = id => {
+        fetch(`http://localhost:5000/todo/${id}`, {
+            method: "DELETE"
+        })
+        .then(
+            this.setState({
+                todos: this.state.todos.filter(item => {
+                    return item.id !== id
+                })
+            })
+        )
+        .catch(error => {
+            console.log('deleteItem error', error)
+        })
+    }
+    render() {
+        return (
+            <div className="app">
+                <h1>ToDo List</h1>
+                <form className="add-todo" onSubmit={this.addTodo}>
+                    <input
+                        type="text"
+                        placeholder="Add Todo"
+                        onChange={this.handleChange}
+                        value={this.state.todo}
+                    />
+                    <button type="submit">Add</button>
+                </form>
+                {this.renderTodos()}
+            </div>
+        )
+    }
 }
-
-ReactDOM.render(<App />, document.getElementById('root'));
+const rootElement = document.getElementById('root')
+ReactDOM.render(<App />, rootElement)
