@@ -7,7 +7,7 @@ class TodoItem extends React.Component {
         }
     }
     toggleDone = () => {
-        fetch(`http://localhost:5000/todo/${this.props.todo.id}`, {
+        fetch(`http://mc-flask-todo-api.herokuapp.com/todo/${this.props.todo.id}`, {
             method: "PATCH",
             headers: {"content-type": "application/json"},
             body: JSON.stringify({
